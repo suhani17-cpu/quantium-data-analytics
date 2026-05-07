@@ -1,4 +1,6 @@
 import pandas as pd
+from dash import Dash, html, dcc
+import plotly.express as px
 
 # Load CSV files
 df1 = pd.read_csv("data/daily_sales_data_0.csv")
@@ -11,17 +13,36 @@ df = pd.concat([df1, df2, df3])
 # Keep only pink morsel
 df = df[df["product"] == "pink morsel"]
 
-# Remove $ sign and convert price to float
+# Clean price column
 df["price"] = df["price"].replace("[$]", "", regex=True).astype(float)
 
 # Create sales column
 df["sales"] = df["price"] * df["quantity"]
 
-# Keep only required columns
-output = df[["sales", "date", "region"]]
+# Convert date
+df["date"] = pd.to_datetime(df["date"])
 
-# Save final output file
-output.to_csv("data/formatted_output.csv", index=False)
+# Group by date
+sales_data = df.groupby("date")["sales"].sum().reset_index()
 
-print(output.head())
-print("formatted_output.csv created successfully")
+# Create line chart
+fig = px.line(
+    sales_data,
+    x="date",
+    y="sales",
+    title="Pink Morsel Sales Over Time"
+)
+
+# Dash app
+app = Dash(__name__)
+
+app.layout = html.Div([
+    html.H1("Soul Foods Sales Visualiser"),
+
+    dcc.Graph(
+        figure=fig
+    )
+])
+
+if __name__ == "__main__":
+    app.run(debug=True)
