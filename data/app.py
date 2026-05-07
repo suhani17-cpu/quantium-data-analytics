@@ -1,45 +1,27 @@
 import pandas as pd
 
-df = pd.read_csv("data/daily_sales_data_0.csv")
+# Load CSV files
+df1 = pd.read_csv("data/daily_sales_data_0.csv")
+df2 = pd.read_csv("data/daily_sales_data_1.csv")
+df3 = pd.read_csv("data/daily_sales_data_2.csv")
 
-print(df.head())
-print(df.columns)
-print(df.info())
-print(df.describe())
-print(df["quantity"].sum())
-print(df["quantity"].mean())
-print(df["quantity"].max())
-print(df[df["quantity"] > 550])
-print(df.sort_values(by="quantity", ascending=False))
-import matplotlib.pyplot as plt
+# Combine all files
+df = pd.concat([df1, df2, df3])
 
-df["quantity"].plot()
+# Keep only pink morsel
+df = df[df["product"] == "pink morsel"]
 
-plt.show()
-df["quantity"].hist()
+# Remove $ sign and convert price to float
+df["price"] = df["price"].replace("[$]", "", regex=True).astype(float)
 
-plt.show()
-import matplotlib.pyplot as plt
+# Create sales column
+df["sales"] = df["price"] * df["quantity"]
 
-plt.hist(df["quantity"])
-plt.show()
-df["price"] = df["price"].replace("[$,]", "", regex=True).astype(float)
+# Keep only required columns
+output = df[["sales", "date", "region"]]
 
-print(df["price"].mean())
-print(df.groupby("product")["quantity"].sum())
-df.groupby("product")["quantity"].sum().plot(kind="bar")
+# Save final output file
+output.to_csv("data/formatted_output.csv", index=False)
 
-plt.show()
-sales = df.groupby("product")["quantity"].sum()
-
-print(sales.idxmax())
-print(sales.max())
-df["revenue"] = df["price"] * df["quantity"]
-
-print(df[["product", "revenue"]].head())
-
-print(df.groupby("product")["revenue"].sum())
-df.groupby("product")["revenue"].sum().plot(kind="pie", autopct="%1.1f%%")
-
-plt.ylabel("")
-plt.show()
+print(output.head())
+print("formatted_output.csv created successfully")
